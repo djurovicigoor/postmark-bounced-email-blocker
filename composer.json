@@ -1,0 +1,52 @@
+{
+  "name": "djurovicigoor/postmark-bounced-email-blocker",
+  "description": "This package will prevent sending an email to addresses that marked an email as bounced or spam in your postmark email stream.",
+  "keywords": [
+    "laravel",
+    "mail",
+    "email",
+    "bounced",
+    "spam",
+    "postmark",
+    "validator"
+  ],
+  "type": "library",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Djurovicigoor\\PostmarkBouncedEmailBlocker\\": "src/",
+      "Djurovicigoor\\PostmarkBouncedEmailBlocker\\Tests\\": "tests/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Djurović Igor",
+      "email": "djurovic.igoor@gmail.com"
+    }
+  ],
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Djurovicigoor\\PostmarkBouncedEmailBlocker\\PostmarkBouncedEmailBlockerServiceProvider"
+      ]
+    }
+  },
+  "require": {
+    "php": "^8.1",
+    "guzzlehttp/guzzle": "^7.7",
+    "ext-json": "*",
+    "illuminate/cache": "^8.0|^9.0|^10.0",
+    "illuminate/config": "^8.0|^9.0|^10.0",
+    "illuminate/contracts": "^8.0|^9.0|^10.0",
+    "illuminate/support": "^8.0|^9.0|^10.0",
+    "illuminate/console": "^8.0|^9.0|^10.0",
+    "illuminate/validation": "^8.0|^9.0|^10.0"
+  },
+  "require-dev": {
+    "mockery/mockery": "^1.4.2",
+    "orchestra/testbench": "*",
+    "phpunit/phpunit": "^9.5.10"
+  }
+}
