@@ -4,10 +4,15 @@ namespace Djurovicigoor\PostmarkBouncedEmailBlocker\Fetcher;
 
 use Djurovicigoor\PostmarkBouncedEmailBlocker\Contracts\Fetcher;
 use Illuminate\Support\Facades\Http;
+use InvalidArgumentException;
 
 class EmailFetcher implements Fetcher {
 	
 	public function handle($postmarkServerApiToken): array {
+		
+		if ($postmarkServerApiToken === NULL || $postmarkServerApiToken === '') {
+			throw new InvalidArgumentException('Postmark token is not present.');
+		}
 		
 		$response = Http::withHeaders([
 			'Accept'                  => 'application/json',
