@@ -27,14 +27,6 @@ class BouncedEmailInPostmark
      */
     public function validate($attribute, $value, $parameters, $validator): bool
     {
-        if ( ! $value) {
-            return true;
-        }
-        
-        $hasValidateDomain = in_array('validate_domain', $parameters, true);
-        if ($hasValidateDomain) {
-            return PostmarkBouncedEmailBlockerFacade::enableDomainBlocking()->isNotBlocked($value);
-        }
         return PostmarkBouncedEmailBlockerFacade::isNotBlocked($value);
     }
 }

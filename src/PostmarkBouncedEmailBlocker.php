@@ -107,7 +107,7 @@ class PostmarkBouncedEmailBlocker
      *
      * @return bool
      */
-    public function isBlocked(string $email = null): bool
+    public function isBlocked(?string $email = null): bool
     {
         if ($email) {
             return in_array($email, $this->emails);
@@ -124,7 +124,7 @@ class PostmarkBouncedEmailBlocker
      *
      * @return bool
      */
-    public function isNotBlocked(string $email = null): bool
+    public function isNotBlocked(?string $email = null): bool
     {
         
         return ! $this->isBlocked($email);
