@@ -2,7 +2,12 @@
 
 namespace Djurovicigoor\PostmarkBouncedEmailBlocker\Contracts;
 
-interface Fetcher {
-	
-	public function handle($postmarkServerApiToken): array;
+interface Fetcher
+{
+    /**
+     * Fetch bounced/spam emails from the source.
+     *
+     * @return array<int, string>
+     */
+    public function handle(string $postmarkServerApiToken): array;
 }

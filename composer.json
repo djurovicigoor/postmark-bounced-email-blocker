@@ -12,12 +12,6 @@
   ],
   "type": "library",
   "license": "MIT",
-  "autoload": {
-    "psr-4": {
-      "Djurovicigoor\\PostmarkBouncedEmailBlocker\\": "src/",
-      "Djurovicigoor\\PostmarkBouncedEmailBlocker\\Tests\\": "tests/"
-    }
-  },
   "authors": [
     {
       "name": "Djurović Igor",
@@ -26,6 +20,12 @@
   ],
   "minimum-stability": "dev",
   "prefer-stable": true,
+  "autoload": {
+    "psr-4": {
+      "Djurovicigoor\\PostmarkBouncedEmailBlocker\\": "src/",
+      "Djurovicigoor\\PostmarkBouncedEmailBlocker\\Tests\\": "tests/"
+    }
+  },
   "extra": {
     "laravel": {
       "providers": [
@@ -35,18 +35,24 @@
   },
   "require": {
     "php": "^8.2",
-    "guzzlehttp/guzzle": "^7.7",
-    "ext-json": "*",
-    "illuminate/cache": "^8.0|^9.0|^10.0|^11.0|^12.0",
-    "illuminate/config": "^8.0|^9.0|^10.0|^11.0|^12.0",
-    "illuminate/contracts": "^8.0|^9.0|^10.0|^11.0|^12.0",
-    "illuminate/support": "^8.0|^9.0|^10.0|^11.0|^12.0",
-    "illuminate/console": "^8.0|^9.0|^10.0|^11.0|^12.0",
-    "illuminate/validation": "^8.0|^9.0|^10.0|^11.0|^12.0"
+    "illuminate/cache": "^10.0|^11.0|^12.0",
+    "illuminate/config": "^10.0|^11.0|^12.0",
+    "illuminate/contracts": "^10.0|^11.0|^12.0",
+    "illuminate/support": "^10.0|^11.0|^12.0",
+    "illuminate/console": "^10.0|^11.0|^12.0",
+    "illuminate/validation": "^10.0|^11.0|^12.0"
   },
   "require-dev": {
+    "laravel/pint": "^1.22",
     "mockery/mockery": "^1.4.2",
-    "orchestra/testbench": "^10.0",
+    "orchestra/testbench": "^8.0|^9.0|^10.0",
     "phpunit/phpunit": "^10.5|^11.0"
+  },
+  "scripts": {
+    "format": "vendor/bin/pint",
+    "test": "vendor/bin/phpunit"
+  },
+  "config": {
+    "sort-packages": true
   }
 }
