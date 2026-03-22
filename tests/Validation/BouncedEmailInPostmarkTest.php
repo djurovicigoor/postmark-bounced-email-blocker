@@ -12,7 +12,7 @@ it('should pass for valid email', function () {
     $this->artisan('postmark-bounced-email:fetch')
         ->assertExitCode(0);
 
-    $rule = new BouncedEmailInPostmark;
+    $rule = new BouncedEmailInPostmark();
     $failed = false;
 
     $rule->validate('email', 'validemail@mywebsite.dev', function () use (&$failed) {
@@ -32,7 +32,7 @@ it('should fail for blocked email', function () {
     $this->artisan('postmark-bounced-email:fetch')
         ->assertExitCode(0);
 
-    $rule = new BouncedEmailInPostmark;
+    $rule = new BouncedEmailInPostmark();
     $failed = false;
 
     $rule->validate('email', 'thisaddressmarkedemailasspam@mywebsite.dev', function () use (&$failed) {
@@ -54,11 +54,11 @@ it('is usable through the validator', function () {
 
     $passingValidation = $this->app['validator']->make(
         ['email' => 'validemail@mywebsite.dev'],
-        ['email' => new BouncedEmailInPostmark]
+        ['email' => new BouncedEmailInPostmark()]
     );
     $failingValidation = $this->app['validator']->make(
         ['email' => 'thisaddressmarkedemailasspam@mywebsite.dev'],
-        ['email' => new BouncedEmailInPostmark]
+        ['email' => new BouncedEmailInPostmark()]
     );
 
     expect($passingValidation->passes())->toBeTrue()

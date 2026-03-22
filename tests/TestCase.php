@@ -64,9 +64,9 @@ abstract class TestCase extends BaseTestCase
         Http::fake([
             'api.postmarkapp.com/*' => Http::response([
                 'Suppressions' => collect($emails)->map(fn (string $email): array => [
-                    'EmailAddress' => $email,
+                    'EmailAddress'      => $email,
                     'SuppressionReason' => 'ManualSuppression',
-                    'CreatedAt' => '2023-06-15T00:00:00.0000000+00:00',
+                    'CreatedAt'         => '2023-06-15T00:00:00.0000000+00:00',
                 ])->all(),
             ]),
         ]);
