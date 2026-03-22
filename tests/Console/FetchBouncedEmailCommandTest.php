@@ -1,47 +1,37 @@
 <?php
 
-namespace Djurovicigoor\PostmarkBouncedEmailBlocker\Tests\Console;
+it('creates the file', function () {
+    $this->fakePostmarkApi(['thisaddressmarkedemailasspam@mywebsite.dev']);
 
-use Djurovicigoor\PostmarkBouncedEmailBlocker\Tests\TestCase;
+    $this->app['config']['postmark-bounced-email-blocker.storage'] = $this->storagePath;
+    $this->postmarkBouncedEmails()->setStoragePath($this->storagePath);
 
-class FetchBouncedEmailCommandTest extends TestCase
-{
-    /** @test */
-    public function it_creates_the_file()
-    {
+    expect($this->storagePath)->not->toBeFile();
 
-        $this->app['config']['postmark-bounced-email-blocker.storage'] = $this->storagePath;
+    $this->artisan('postmark-bounced-email:fetch')
+        ->assertExitCode(0);
 
-        $this->postmarkBouncedEmails()->setStoragePath($this->storagePath);
+    expect($this->storagePath)->toBeFile();
 
-        $this->assertFileDoesNotExist($this->storagePath);
+    $emails = $this->postmarkBouncedEmails()->getEmails();
 
-        $this->artisan('postmark-bounced-email:fetch')
-            ->assertExitCode(0);
+    expect($emails)->toBeArray()
+        ->and($emails)->toContain('thisaddressmarkedemailasspam@mywebsite.dev');
+});
 
-        $this->assertFileExists($this->storagePath);
+it('overwrites the file', function () {
+    $this->fakePostmarkApi(['thisaddressmarkedemailasspam@mywebsite.dev']);
 
-        $emails = $this->postmarkBouncedEmails()->getEmails();
+    file_put_contents($this->storagePath, json_encode(['foo-bar']));
 
-        $this->assertIsArray($emails);
-        $this->assertContains(env('POSTMARK_BOUNCED_EMAIL_BLOCKER_TESTING_BLOCKED_EMAIL'), $emails);
-    }
+    $this->artisan('postmark-bounced-email:fetch')
+        ->assertExitCode(0);
 
-    /** @test */
-    public function it_overwrites_the_file()
-    {
+    expect($this->storagePath)->toBeFile();
 
-        file_put_contents($this->storagePath, json_encode(['foo-bar']));
+    $emails = $this->postmarkBouncedEmails()->getEmails();
 
-        $this->artisan('postmark-bounced-email:fetch')
-            ->assertExitCode(0);
-
-        $this->assertFileExists($this->storagePath);
-
-        $emails = $this->postmarkBouncedEmails()->getEmails();
-
-        $this->assertIsArray($emails);
-        $this->assertContains(env('POSTMARK_BOUNCED_EMAIL_BLOCKER_TESTING_BLOCKED_EMAIL'), $emails);
-        $this->assertNotContains('foo-bar', $emails);
-    }
-}
+    expect($emails)->toBeArray()
+        ->and($emails)->toContain('thisaddressmarkedemailasspam@mywebsite.dev')
+        ->and($emails)->not->toContain('foo-bar');
+});

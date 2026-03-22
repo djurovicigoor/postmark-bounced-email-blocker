@@ -1,75 +1,66 @@
 <?php
 
-namespace Djurovicigoor\PostmarkBouncedEmailBlocker\Tests\Validation;
-
-use Djurovicigoor\PostmarkBouncedEmailBlocker\Tests\TestCase;
 use Djurovicigoor\PostmarkBouncedEmailBlocker\Validation\BouncedEmailInPostmark;
 
-class BouncedEmailInPostmarkTest extends TestCase
-{
-    /** @test */
-    public function it_should_pass_for_valid_email()
-    {
+it('should pass for valid email', function () {
+    $this->fakePostmarkApi(['thisaddressmarkedemailasspam@mywebsite.dev']);
 
-        $this->app['config']['postmark-bounced-email-blocker.storage'] = $this->storagePath;
+    $this->app['config']['postmark-bounced-email-blocker.storage'] = $this->storagePath;
 
-        $this->assertFileDoesNotExist($this->storagePath);
+    expect($this->storagePath)->not->toBeFile();
 
-        $this->artisan('postmark-bounced-email:fetch')
-            ->assertExitCode(0);
+    $this->artisan('postmark-bounced-email:fetch')
+        ->assertExitCode(0);
 
-        $rule = new BouncedEmailInPostmark();
-        $failed = false;
+    $rule = new BouncedEmailInPostmark;
+    $failed = false;
 
-        $rule->validate('email', env('POSTMARK_BOUNCED_EMAIL_BLOCKER_TESTING_NOT_BLOCKED_EMAIL'), function () use (&$failed) {
-            $failed = true;
-        });
+    $rule->validate('email', 'validemail@mywebsite.dev', function () use (&$failed) {
+        $failed = true;
+    });
 
-        $this->assertFalse($failed);
-    }
+    expect($failed)->toBeFalse();
+});
 
-    /** @test */
-    public function it_should_fail_for_blocked_email()
-    {
+it('should fail for blocked email', function () {
+    $this->fakePostmarkApi(['thisaddressmarkedemailasspam@mywebsite.dev']);
 
-        $this->app['config']['postmark-bounced-email-blocker.storage'] = $this->storagePath;
+    $this->app['config']['postmark-bounced-email-blocker.storage'] = $this->storagePath;
 
-        $this->assertFileDoesNotExist($this->storagePath);
+    expect($this->storagePath)->not->toBeFile();
 
-        $this->artisan('postmark-bounced-email:fetch')
-            ->assertExitCode(0);
+    $this->artisan('postmark-bounced-email:fetch')
+        ->assertExitCode(0);
 
-        $rule = new BouncedEmailInPostmark();
-        $failed = false;
+    $rule = new BouncedEmailInPostmark;
+    $failed = false;
 
-        $rule->validate('email', env('POSTMARK_BOUNCED_EMAIL_BLOCKER_TESTING_BLOCKED_EMAIL'), function () use (&$failed) {
-            $failed = true;
-        });
+    $rule->validate('email', 'thisaddressmarkedemailasspam@mywebsite.dev', function () use (&$failed) {
+        $failed = true;
+    });
 
-        $this->assertTrue($failed);
-    }
+    expect($failed)->toBeTrue();
+});
 
-    /** @test */
-    public function it_is_usable_through_the_validator()
-    {
+it('is usable through the validator', function () {
+    $this->fakePostmarkApi(['thisaddressmarkedemailasspam@mywebsite.dev']);
 
-        $this->app['config']['postmark-bounced-email-blocker.storage'] = $this->storagePath;
+    $this->app['config']['postmark-bounced-email-blocker.storage'] = $this->storagePath;
 
-        $this->assertFileDoesNotExist($this->storagePath);
+    expect($this->storagePath)->not->toBeFile();
 
-        $this->artisan('postmark-bounced-email:fetch')
-            ->assertExitCode(0);
+    $this->artisan('postmark-bounced-email:fetch')
+        ->assertExitCode(0);
 
-        $passingValidation = $this->app['validator']->make(
-            ['email' => env('POSTMARK_BOUNCED_EMAIL_BLOCKER_TESTING_NOT_BLOCKED_EMAIL')],
-            ['email' => new BouncedEmailInPostmark()]
-        );
-        $failingValidation = $this->app['validator']->make(
-            ['email' => env('POSTMARK_BOUNCED_EMAIL_BLOCKER_TESTING_BLOCKED_EMAIL')],
-            ['email' => new BouncedEmailInPostmark()]
-        );
+    $passingValidation = $this->app['validator']->make(
+        ['email' => 'validemail@mywebsite.dev'],
+        ['email' => new BouncedEmailInPostmark]
+    );
+    $failingValidation = $this->app['validator']->make(
+        ['email' => 'thisaddressmarkedemailasspam@mywebsite.dev'],
+        ['email' => new BouncedEmailInPostmark]
+    );
 
-        $this->assertTrue($passingValidation->passes());
-        $this->assertTrue($failingValidation->fails());
-    }
-}
+    expect($passingValidation->passes())->toBeTrue()
+        ->and($failingValidation->fails())->toBeTrue();
+});

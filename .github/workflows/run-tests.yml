@@ -16,7 +16,7 @@ jobs:
           - laravel: 10.*
             testbench: ^8.0
           - laravel: 11.*
-            testbench: ^9.0
+            testbench: ^9.6
           - laravel: 12.*
             testbench: ^10.0
           - laravel: 13.*
@@ -44,4 +44,4 @@ jobs:
           composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction
 
       - name: Execute tests
-        run: vendor/bin/phpunit
+        run: vendor/bin/pest

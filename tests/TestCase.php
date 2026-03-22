@@ -2,55 +2,31 @@
 
 namespace Djurovicigoor\PostmarkBouncedEmailBlocker\Tests;
 
-use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Http;
 use Orchestra\Testbench\TestCase as BaseTestCase;
-use Illuminate\Foundation\Bootstrap\LoadEnvironmentVariables;
 use Djurovicigoor\PostmarkBouncedEmailBlocker\PostmarkBouncedEmailBlocker;
 
 abstract class TestCase extends BaseTestCase
 {
-    /**
-     * @var string
-     */
-    protected $storagePath = __DIR__.'/postmark-bounced-emails.json';
+    protected string $storagePath = __DIR__.'/postmark-bounced-emails.json';
 
-    /**
-     * Define environment setup.
-     *
-     * @param  Application  $app
-     * @return void
-     */
-    protected function getEnvironmentSetUp($app)
+    protected function getEnvironmentSetUp($app): void
     {
-
-        // make sure, our .env file is loaded
-        $app->useEnvironmentPath(__DIR__.'/..');
-        $app->bootstrapWith([LoadEnvironmentVariables::class]);
-
-        $app['config']->set('postmark-bounced-email-blocker.server-api-token', env('POSTMARK_BOUNCED_EMAIL_BLOCKER_SERVER_API_TOKEN', null));
+        $app['config']->set('postmark-bounced-email-blocker.server-api-token', 'test-api-token');
 
         parent::getEnvironmentSetUp($app);
-
     }
 
-    /**
-     * Setup the test environment.
-     */
     protected function setUp(): void
     {
-
         parent::setUp();
 
         $this->postmarkBouncedEmails()->flushStorage();
         $this->postmarkBouncedEmails()->flushCache();
     }
 
-    /**
-     * Clean up the testing environment before the next test.
-     */
     protected function tearDown(): void
     {
-
         $this->postmarkBouncedEmails()->flushStorage();
         $this->postmarkBouncedEmails()->flushCache();
 
@@ -58,32 +34,41 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
-     * Package Service Providers
-     *
-     * @param  Application  $app
-     * @return array
+     * @return array<int, class-string>
      */
-    protected function getPackageProviders($app)
+    protected function getPackageProviders($app): array
     {
-
         return ['Djurovicigoor\PostmarkBouncedEmailBlocker\PostmarkBouncedEmailBlockerServiceProvider'];
     }
 
     /**
-     * Package Aliases
-     *
-     * @param  Application  $app
-     * @return array
+     * @return array<string, class-string>
      */
-    protected function getPackageAliases($app)
+    protected function getPackageAliases($app): array
     {
-
         return ['PostmarkBouncedEmailBlockerFacade' => 'Djurovicigoor\PostmarkBouncedEmailBlocker\Facades\PostmarkBouncedEmailBlockerFacade'];
     }
 
     protected function postmarkBouncedEmails(): PostmarkBouncedEmailBlocker
     {
-
         return $this->app['postmark_bounced.emails'];
+    }
+
+    /**
+     * Fake the Postmark API response for testing.
+     *
+     * @param  array<int, string>  $emails
+     */
+    protected function fakePostmarkApi(array $emails = ['thisaddressmarkedemailasspam@mywebsite.dev']): void
+    {
+        Http::fake([
+            'api.postmarkapp.com/*' => Http::response([
+                'Suppressions' => collect($emails)->map(fn (string $email): array => [
+                    'EmailAddress' => $email,
+                    'SuppressionReason' => 'ManualSuppression',
+                    'CreatedAt' => '2023-06-15T00:00:00.0000000+00:00',
+                ])->all(),
+            ]),
+        ]);
     }
 }

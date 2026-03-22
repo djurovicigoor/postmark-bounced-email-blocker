@@ -1,158 +1,111 @@
 <?php
 
-namespace Djurovicigoor\PostmarkBouncedEmailBlocker\Tests;
-
 use Djurovicigoor\PostmarkBouncedEmailBlocker\PostmarkBouncedEmailBlocker;
 
-class PostmarkBouncedEmailBlockerTest extends TestCase
-{
-    /** @test */
-    public function it_can_be_resolved_using_alias()
-    {
+it('can be resolved using alias', function () {
+    expect(get_class($this->app->make('postmark_bounced.emails')))
+        ->toBe(PostmarkBouncedEmailBlocker::class);
+});
 
-        $this->assertEquals(PostmarkBouncedEmailBlocker::class, get_class($this->app->make('postmark_bounced.emails')));
-    }
+it('can be resolved using class', function () {
+    expect(get_class($this->app->make(PostmarkBouncedEmailBlocker::class)))
+        ->toBe(PostmarkBouncedEmailBlocker::class);
+});
 
-    /** @test */
-    public function it_can_be_resolved_using_class()
-    {
+it('can get storage path', function () {
+    expect($this->postmarkBouncedEmails()->getStoragePath())
+        ->toBe($this->app['config']['postmark-bounced-email-blocker.storage']);
+});
 
-        $this->assertEquals(PostmarkBouncedEmailBlocker::class, get_class($this->app->make(PostmarkBouncedEmailBlocker::class)));
-    }
+it('can set storage path', function () {
+    $this->postmarkBouncedEmails()->setStoragePath('foo-bar');
 
-    /** @test */
-    public function it_can_get_storage_path()
-    {
+    expect($this->postmarkBouncedEmails()->getStoragePath())
+        ->toBe('foo-bar');
+});
 
-        $this->assertEquals(
-            $this->app['config']['postmark-bounced-email-blocker.storage'],
-            $this->postmarkBouncedEmails()->getStoragePath()
-        );
-    }
+it('can get cache key', function () {
+    expect($this->postmarkBouncedEmails()->getCacheKey())
+        ->toBe($this->app['config']['postmark-bounced-email-blocker.cache.key']);
+});
 
-    /** @test */
-    public function it_can_set_storage_path()
-    {
+it('can set cache key', function () {
+    $this->postmarkBouncedEmails()->setCacheKey('foo-bar');
 
-        $this->postmarkBouncedEmails()->setStoragePath('foo-bar');
+    expect($this->postmarkBouncedEmails()->getCacheKey())
+        ->toBe('foo-bar');
+});
 
-        $this->assertEquals('foo-bar', $this->postmarkBouncedEmails()->getStoragePath());
-    }
+it('takes cached emails if available', function () {
+    $this->app['cache.store'][$this->postmarkBouncedEmails()->getCacheKey()] = ['foo-bar'];
 
-    /** @test */
-    public function it_can_get_cache_key()
-    {
+    $this->postmarkBouncedEmails()->bootstrap();
 
-        $this->assertEquals(
-            $this->app['config']['postmark-bounced-email-blocker.cache.key'],
-            $this->postmarkBouncedEmails()->getCacheKey()
-        );
-    }
+    expect($this->postmarkBouncedEmails()->getEmails())
+        ->toBe(['foo-bar']);
+});
 
-    /** @test */
-    public function it_can_set_cache_key()
-    {
+it('flushes invalid cache values', function () {
+    $this->app['cache.store'][$this->postmarkBouncedEmails()->getCacheKey()] = 'foo-bar';
 
-        $this->postmarkBouncedEmails()->setCacheKey('foo-bar');
+    $this->postmarkBouncedEmails()->bootstrap();
 
-        $this->assertEquals('foo-bar', $this->postmarkBouncedEmails()->getCacheKey());
-    }
+    expect($this->app['cache.store'][$this->postmarkBouncedEmails()->getCacheKey()])
+        ->not->toBe('foo-bar');
+});
 
-    /** @test */
-    public function it_takes_cached_emails_if_available()
-    {
+it('skips cache when configured', function () {
+    $this->app['config']['postmark-bounced-email-blocker.cache.enabled'] = false;
 
-        $this->app['cache.store'][$this->postmarkBouncedEmails()->getCacheKey()] = ['foo-bar'];
+    $emails = $this->postmarkBouncedEmails()->getEmails();
 
-        $this->postmarkBouncedEmails()->bootstrap();
+    expect($emails)->toBeArray()
+        ->and($this->app['cache.store'][$this->postmarkBouncedEmails()->getCacheKey()])->toBeNull()
+        ->and($emails)->toContain('thisaddressmarkedemailasspam@mywebsite.dev');
+});
 
-        $emails = $this->postmarkBouncedEmails()->getEmails();
+it('takes storage emails when cache is not available', function () {
+    $this->app['config']['postmark-bounced-email-blocker.cache.enabled'] = false;
 
-        $this->assertEquals(['foo-bar'], $emails);
-    }
+    file_put_contents($this->storagePath, json_encode(['thisaddressmarkedemailasspam@mywebsite.dev']));
 
-    /** @test */
-    public function it_flushes_invalid_cache_values()
-    {
+    $this->postmarkBouncedEmails()->bootstrap();
 
-        $this->app['cache.store'][$this->postmarkBouncedEmails()->getCacheKey()] = 'foo-bar';
+    expect($this->postmarkBouncedEmails()->getEmails())
+        ->toBe(['thisaddressmarkedemailasspam@mywebsite.dev']);
+});
 
-        $this->postmarkBouncedEmails()->bootstrap();
+it('can flush storage', function () {
+    $this->postmarkBouncedEmails()->setStoragePath($this->storagePath);
 
-        $this->assertNotEquals('foo-bar', $this->app['cache.store'][$this->postmarkBouncedEmails()->getCacheKey()]);
-    }
+    file_put_contents($this->storagePath, json_encode(['thisaddressmarkedemailasspam@mywebsite.dev']));
 
-    /** @test */
-    public function it_skips_cache_when_configured()
-    {
+    $this->postmarkBouncedEmails()->flushStorage();
 
-        $this->app['config']['postmark-bounced-email-blocker.cache.enabled'] = false;
+    expect($this->storagePath)->not->toBeFile();
+});
 
-        $emails = $this->postmarkBouncedEmails()->getEmails();
+it('does not throw exceptions for flush storage when file does not exist', function () {
+    $this->postmarkBouncedEmails()->flushStorage();
 
-        $this->assertIsArray($emails);
-        $this->assertNull($this->app['cache.store'][$this->postmarkBouncedEmails()->getCacheKey()]);
-        $this->assertContains('thisaddressmarkedemailasspam@mywebsite.dev', $emails);
-    }
+    expect(true)->toBeTrue();
+});
 
-    /** @test */
-    public function it_takes_storage_emails_when_cache_is_not_available()
-    {
+it('can flush cache', function () {
+    $this->app['cache.store'][$this->postmarkBouncedEmails()->getCacheKey()] = 'foo-bar';
 
-        $this->app['config']['postmark-bounced-email-blocker.cache.enabled'] = false;
+    expect($this->app['cache']->get($this->postmarkBouncedEmails()->getCacheKey()))
+        ->toBe('foo-bar');
 
-        file_put_contents($this->storagePath, json_encode(['thisaddressmarkedemailasspam@mywebsite.dev']));
+    $this->postmarkBouncedEmails()->flushCache();
 
-        $this->postmarkBouncedEmails()->bootstrap();
+    expect($this->app['cache']->get($this->postmarkBouncedEmails()->getCacheKey()))
+        ->toBeNull();
+});
 
-        $emails = $this->postmarkBouncedEmails()->getEmails();
-
-        $this->assertEquals(['thisaddressmarkedemailasspam@mywebsite.dev'], $emails);
-    }
-
-    /** @test */
-    public function it_can_flush_storage()
-    {
-
-        $this->postmarkBouncedEmails()->setStoragePath($this->storagePath);
-
-        file_put_contents($this->storagePath, json_encode(['thisaddressmarkedemailasspam@mywebsite.dev']));
-
-        $this->postmarkBouncedEmails()->flushStorage();
-
-        $this->assertFileDoesNotExist($this->storagePath);
-    }
-
-    /** @test */
-    public function it_doesnt_throw_exceptions_for_flush_storage_when_file_doesnt_exist()
-    {
-
-        $this->postmarkBouncedEmails()->flushStorage();
-
-        $this->assertTrue(true);
-    }
-
-    /** @test */
-    public function it_can_flush_cache()
-    {
-
-        $this->app['cache.store'][$this->postmarkBouncedEmails()->getCacheKey()] = 'foo-bar';
-
-        $this->assertEquals('foo-bar', $this->app['cache']->get($this->postmarkBouncedEmails()->getCacheKey()));
-
-        $this->postmarkBouncedEmails()->flushCache();
-
-        $this->assertNull($this->app['cache']->get($this->postmarkBouncedEmails()->getCacheKey()));
-    }
-
-    /** @test */
-    public function it_can_verify_is_blocked()
-    {
-
-        $this->assertTrue($this->postmarkBouncedEmails()->isBlocked('thisaddressmarkedemailasspam@mywebsite.dev'));
-        $this->assertFalse($this->postmarkBouncedEmails()->isNotBlocked('thisaddressmarkedemailasspam@mywebsite.dev'));
-
-        $this->assertFalse($this->postmarkBouncedEmails()->isBlocked('validemail@mywebsite.dev'));
-        $this->assertTrue($this->postmarkBouncedEmails()->isNotBlocked('validemail@mywebsite.dev'));
-    }
-}
+it('can verify is blocked', function () {
+    expect($this->postmarkBouncedEmails()->isBlocked('thisaddressmarkedemailasspam@mywebsite.dev'))->toBeTrue()
+        ->and($this->postmarkBouncedEmails()->isNotBlocked('thisaddressmarkedemailasspam@mywebsite.dev'))->toBeFalse()
+        ->and($this->postmarkBouncedEmails()->isBlocked('validemail@mywebsite.dev'))->toBeFalse()
+        ->and($this->postmarkBouncedEmails()->isNotBlocked('validemail@mywebsite.dev'))->toBeTrue();
+});
