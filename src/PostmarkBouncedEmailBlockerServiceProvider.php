@@ -2,12 +2,12 @@
 
 namespace Djurovicigoor\PostmarkBouncedEmailBlocker;
 
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Factory;
+use Illuminate\Support\ServiceProvider;
 use Illuminate\Contracts\Foundation\Application;
+use Djurovicigoor\PostmarkBouncedEmailBlocker\Validation\BouncedEmailInPostmark;
 use Djurovicigoor\PostmarkBouncedEmailBlocker\Console\FetchPostmarkBouncedEmailsCommand;
 use Djurovicigoor\PostmarkBouncedEmailBlocker\Facades\PostmarkBouncedEmailBlockerFacade;
-use Djurovicigoor\PostmarkBouncedEmailBlocker\Validation\BouncedEmailInPostmark;
 
 class PostmarkBouncedEmailBlockerServiceProvider extends ServiceProvider
 {
