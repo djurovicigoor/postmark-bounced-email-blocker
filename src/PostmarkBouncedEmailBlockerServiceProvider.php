@@ -3,8 +3,11 @@
 namespace Djurovicigoor\PostmarkBouncedEmailBlocker;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Factory;
 use Illuminate\Contracts\Foundation\Application;
 use Djurovicigoor\PostmarkBouncedEmailBlocker\Console\FetchPostmarkBouncedEmailsCommand;
+use Djurovicigoor\PostmarkBouncedEmailBlocker\Facades\PostmarkBouncedEmailBlockerFacade;
+use Djurovicigoor\PostmarkBouncedEmailBlocker\Validation\BouncedEmailInPostmark;
 
 class PostmarkBouncedEmailBlockerServiceProvider extends ServiceProvider
 {
@@ -25,6 +28,12 @@ class PostmarkBouncedEmailBlockerServiceProvider extends ServiceProvider
         $this->publishes([
             $this->config => config_path('postmark-bounced-email-blocker.php'),
         ], 'postmark-bounced-email-blocker');
+
+        $this->callAfterResolving('validator', function (Factory $validator): void {
+            $validator->extend('bounced_email_in_postmark', function (string $attribute, mixed $value): bool {
+                return ! PostmarkBouncedEmailBlockerFacade::isBlocked($value);
+            }, BouncedEmailInPostmark::$errorMessage);
+        });
     }
 
     /**
